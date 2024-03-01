@@ -1046,14 +1046,12 @@ impl FileDialog {
                     if !focused && !self.path_edit_visible {
                         let mut focus = false;
                         ui.input(|inp| {
-                            for text in inp.events.iter().filter_map(|ev| match ev {
-                                egui::Event::Key { key, modifiers, .. } => {
-                                    if modifiers.any() {
-                                        return None;
-                                    }
+                            if inp.modifiers.any() {
+                                return;
+                            }
 
-                                    Some(key.name()) // no method to get text from Key
-                                },
+                            for text in inp.events.iter().filter_map(|ev| match ev {
+                                egui::Event::Text(t) => Some(t),
                                 _ => None,
                             }) {
                                 if text.starts_with("/") {
