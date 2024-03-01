@@ -54,7 +54,7 @@ pub enum DialogState {
 ///         if ui.button("Select a file").clicked() {
 ///             self.file_dialog.select_file();
 ///         }
-///         
+///
 ///         if let Some(path) = self.file_dialog.update(ctx).selected() {
 ///             println!("Selected file: {:?}", path);
 ///         }
@@ -1036,13 +1036,24 @@ impl FileDialog {
                         egui::Vec2::new(ui.available_width(), 0.0),
                         egui::TextEdit::singleline(&mut self.search_value),
                     );
-                    // Trigger entry filter input when typing is detected
-                    let focused = re.has_focus();
+                    // Trigger entry filter input when typing is detected and nothing else is focused
+                    let mut focused = re.has_focus();
+                    ui.memory(|mem| {
+                        if let Some(_) = mem.focus() {
+                            focused = true;
+                        }
+                    });
                     if !focused && !self.path_edit_visible {
                         let mut focus = false;
                         ui.input(|inp| {
                             for text in inp.events.iter().filter_map(|ev| match ev {
-                                egui::Event::Text(t) => Some(t),
+                                egui::Event::Key { key, modifiers, .. } => {
+                                    if modifiers.any() {
+                                        return None;
+                                    }
+
+                                    Some(key.name()) // no method to get text from Key
+                                },
                                 _ => None,
                             }) {
                                 if text.starts_with("/") {
@@ -1059,7 +1070,7 @@ impl FileDialog {
                             if let Some(mut state) = egui::TextEdit::load_state(ui.ctx(), re.id) {
                                 state
                                     .cursor
-                                    .set_char_range(Some(CCursorRange::one(CCursor::new(1))));
+                                    .set_char_range(Some(CCursorRange::one(CCursor::new(self.search_value.len()))));
                                 state.store(ui.ctx(), re.id);
                             }
                         }
