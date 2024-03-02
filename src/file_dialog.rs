@@ -1046,7 +1046,7 @@ impl FileDialog {
                     if !focused && !self.path_edit_visible {
                         let mut focus = false;
                         ui.input(|inp| {
-                            if inp.modifiers.any() {
+                            if inp.modifiers.any() && !inp.modifiers.shift_only() {
                                 return;
                             }
 
